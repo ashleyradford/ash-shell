@@ -13,6 +13,7 @@ void init_ui(void);
 char *prompt_line(void);
 char *prompt_username(void);
 char *prompt_hostname(void);
+char *get_home(void);
 char *prompt_cwd(void);
 int prompt_status(void);
 unsigned int prompt_cmd_num(void);

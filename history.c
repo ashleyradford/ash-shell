@@ -1,11 +1,13 @@
 #include <stddef.h>
 
 #include "history.h"
+#include "elist.h"
 
 void hist_init(unsigned int limit)
 {
     // TODO: set up history data structures, with 'limit' being the maximum
     // number of entries maintained.
+    //struct elist *list = elist_create(limit);
 }
 
 void hist_destroy(void)
@@ -20,6 +22,7 @@ void hist_add(const char *cmd)
 
 void hist_print(void)
 {
+    // def use elist here
 
 }
 

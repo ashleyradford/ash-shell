@@ -1,5 +1,5 @@
 # Output binary name
-bin=crash
+bin=ash
 lib=libshell.so
 
 # Set the following to '0' to disable log messages:
@@ -10,7 +10,7 @@ CFLAGS += -g -Wall -fPIC -DLOGGER=$(LOGGER)
 LDLIBS += -lm -lreadline
 LDFLAGS += -L. -Wl,-rpath='$$ORIGIN'
 
-src=history.c shell.c ui.c
+src=history.c shell.c ui.c elist.c
 obj=$(src:.c=.o)
 
 all: $(bin) $(lib)
