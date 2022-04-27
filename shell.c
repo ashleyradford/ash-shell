@@ -69,9 +69,11 @@ struct elist *tokenize(char *command) {
     /* Tokenize -- note that ' \t\n\r' will all be removed */
     while ((curr_tok = next_token(&next_tok, " \t\n\r")) != NULL) {
         elist_add(tokens, curr_tok);
+        LOG("Token %zu: '%s'\n", elist_size(tokens), curr_tok);
     }
 
     elist_add(tokens, (char *) 0);
+    LOG("Token %zu: '%s'\n", elist_size(tokens), curr_tok);
     return tokens;
 }
 
@@ -100,6 +102,7 @@ struct elist *setup_processes(struct elist *tokens) {
 
     struct elist *cmds = elist_create(30);
     int token_start = 0;
+    LOG("elist size: %ld\n", elist_size(tokens));
     for (int i = 0; i < elist_size(tokens) - 1; i++) {
 
         if (strcmp(tokens_arr[i], "|") == 0) {
@@ -118,7 +121,8 @@ struct elist *setup_processes(struct elist *tokens) {
             cmd->stdout_file = NULL;
             elist_add(cmds, cmd);
 
-            token_start = token_start + i + 1;
+            LOG("cmd token: %s\n", *(cmd->tokens));
+            token_start = i + 1;
         }
     }
 
@@ -134,6 +138,7 @@ struct elist *setup_processes(struct elist *tokens) {
     cmd->tokens = (tokens_arr + token_start);
     elist_add(cmds, cmd);
 
+    LOG("cmd token: %s\n", *(cmd->tokens));
     return cmds;
 }
 
@@ -148,16 +153,19 @@ void execute_pipeline(struct elist *procs, int pos) {
         pid_t pid = fork();
         if (pid == 0) {
             /* Child - sending stdout of command to the pipe */
+            LOG("child command: %s\n", *(cmd->tokens));
             dup2(fds[1], STDOUT_FILENO);
             close(fds[0]); // closing read
             execvp(cmd->tokens[0], cmd->tokens); 
         } else {
             /* Parent - setting up the stdin of the next process to come from the pipe */
+            LOG("parent command: %s\n", *(cmd->tokens));
             dup2(fds[0], STDIN_FILENO);
             close(fds[1]); // closing write
             execute_pipeline(procs, pos+1);
         }
     } else {
+        LOG("non pipe command: %s\n", *(cmd->tokens));
         if (cmd->stdout_file != NULL) {
             int output = open(cmd->stdout_file, O_CREAT | O_WRONLY, 0666);
             dup2(output, STDOUT_FILENO);
