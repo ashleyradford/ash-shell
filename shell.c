@@ -97,8 +97,7 @@ int handle_builtins(struct elist *tokens) {
 
 struct elist *setup_processes(struct elist *tokens) {
     /* Grab tokens as an array first to help brain understand */
-    char **tokens_arr = (char **) elist_storage(tokens);
-    //char **tokens_arr = (char **) tokens->element_storage;
+    char **tokens_arr = (char **) elist_elements(tokens);
 
     struct elist *cmds = elist_create(30);
     int token_start = 0;
@@ -142,7 +141,7 @@ struct elist *setup_processes(struct elist *tokens) {
     return cmds;
 }
 
-void execute_pipeline(struct elist *procs, int pos) {
+int execute_pipeline(struct elist *procs, int pos) {
 
     /* Sets up a pipeline piece by piece */
     struct command_line *cmd = elist_get(procs, pos);
@@ -154,24 +153,33 @@ void execute_pipeline(struct elist *procs, int pos) {
         if (pid == 0) {
             /* Child - sending stdout of command to the pipe */
             LOG("child command: %s\n", *(cmd->tokens));
-            dup2(fds[1], STDOUT_FILENO);
             close(fds[0]); // closing read
-            execvp(cmd->tokens[0], cmd->tokens); 
+            dup2(fds[1], STDOUT_FILENO);
+            close(fds[1]); // cleaning up fds
+            execvp(cmd->tokens[0], cmd->tokens);
+            perror("Bad command");
+            exit(1);
         } else {
             /* Parent - setting up the stdin of the next process to come from the pipe */
             LOG("parent command: %s\n", *(cmd->tokens));
-            dup2(fds[0], STDIN_FILENO);
             close(fds[1]); // closing write
+            dup2(fds[0], STDIN_FILENO);
+            close(fds[0]); // cleaning up fds
             execute_pipeline(procs, pos+1);
         }
     } else {
-        LOG("non pipe command: %s\n", *(cmd->tokens));
+        LOG("last command: %s\n", *(cmd->tokens));
         if (cmd->stdout_file != NULL) {
             int output = open(cmd->stdout_file, O_CREAT | O_WRONLY, 0666);
             dup2(output, STDOUT_FILENO);
         }
         execvp(cmd->tokens[0], cmd->tokens);
+        close(STDIN_FILENO);    // only fails without this when single command,
+                                // but a bad pipe works without this?
+        perror("Bad command");
+        exit(1);
     }
+    return 0;
 }
 
 int main(void)
@@ -208,7 +216,9 @@ int main(void)
         struct elist *procs = setup_processes(tokens);
         pid_t child = fork();
         if (child == 0) {
-            execute_pipeline(procs, 0);
+            if (execute_pipeline(procs, 0)) {
+                printf("BAD");
+            }
         } else {
             int status;
             wait(&status); // waiting to know that the pipeline is finished
@@ -218,6 +228,6 @@ int main(void)
         free(command);
     }
 
-    printf("Goodbye :)\n");
+    //printf("Goodbye :)\n");
     return 0;
 }
