@@ -21,9 +21,10 @@ $(bin): $(obj)
 $(lib): $(obj)
 	$(CC) $(CFLAGS) $(LDLIBS) $(LDFLAGS) $(obj) -shared -o $@
 
-shell.o: shell.c history.h logger.h ui.h
-history.o: history.c history.h logger.h
+shell.o: shell.c history.h logger.h ui.h elist.h
+history.o: history.c history.h logger.h elist.h
 ui.o: ui.h ui.c logger.h history.h
+elist.o: elist.h elist.c logger.h
 
 clean:
 	rm -f $(bin) $(obj) $(lib) vgcore.*

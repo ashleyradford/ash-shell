@@ -15,7 +15,7 @@ static const char *good_str = "😋";
 static const char *bad_str  = "😭";
 static bool scripting = false;
 static char *user;
-static char host[HOST_NAME_MAX+1];
+static char host[HOST_NAME_MAX + 1];
 // + 1 to deal with possible truncation in gethostname()
 
 static int readline_init(void);
@@ -100,7 +100,7 @@ char *get_home(void) {
     }
     memcpy(home_dir, "/home/", strlen("/home/"));
     strcat(home_dir, user);
-    strcat(home_dir, "\0"); // do we even need this?
+    //strcat(home_dir, "\0"); // do we even need this?
 
     return home_dir;
 }
@@ -136,15 +136,22 @@ unsigned int prompt_cmd_num(void)
 
 char *read_command(void)
 {
-    // implement scripting support here
-    // if we are receiving commands from a user, then do the following:
-    char *prompt = prompt_line();
-    char *command = readline(prompt); // allows us to arrow back and forth over the line we are typing
-    free(prompt);
-
-    // if we are receiving commands from a **script**, then do the following:
-    // <insert code that uses getline instead of readline here>
-    return command;
+    if (scripting) {
+        char *line = NULL;
+        size_t buf_sz = 0;
+        ssize_t read_sz = getline(&line, &buf_sz, stdin);
+        if (read_sz == -1) {
+            perror("getline");
+            return NULL;
+        }
+        line[read_sz - 1] = '\0';
+        return line; // remember to free!!
+    } else {
+        char *prompt = prompt_line();
+        char *command = readline(prompt); // allows us to arrow back and forth over the line we are typing
+        free(prompt);
+        return command;
+    }
 }
 
 int readline_init(void)
