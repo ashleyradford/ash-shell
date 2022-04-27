@@ -17,6 +17,7 @@
 struct command_line {
     char **tokens; // pointer to an array of character pointers
     bool stdout_pipe;
+    bool stdin_pipe;
     char *stdout_file;
 };
 
@@ -216,12 +217,11 @@ int main(void)
         struct elist *procs = setup_processes(tokens);
         pid_t child = fork();
         if (child == 0) {
-            if (execute_pipeline(procs, 0)) {
-                printf("BAD");
-            }
+            execute_pipeline(procs, 0);
         } else {
             int status;
             wait(&status); // waiting to know that the pipeline is finished
+            set_prompt_status(status);
         }
 
         /* We are done with command; free it */

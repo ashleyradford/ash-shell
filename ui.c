@@ -14,6 +14,7 @@
 static const char *good_str = "😋";
 static const char *bad_str  = "😭";
 static bool scripting = false;
+static int status;
 static char *user;
 static char host[HOST_NAME_MAX + 1];
 // + 1 to deal with possible truncation in gethostname()
@@ -34,7 +35,7 @@ void init_ui(void)
     rl_startup_hook = readline_init;
 
     if (!isatty(STDIN_FILENO)) {
-        LOGP("data piped in on stdin; entering script mode\n");
+        LOGP("Data piped in on stdin; entering script mode\n");
         scripting = true;
     }
 }
@@ -125,7 +126,11 @@ char *prompt_cwd(void)
 
 int prompt_status(void)
 {
-    return -1;
+    return status;
+}
+
+void set_prompt_status(int val) {
+    status = val;
 }
 
 unsigned int prompt_cmd_num(void)
@@ -141,7 +146,6 @@ char *read_command(void)
         size_t buf_sz = 0;
         ssize_t read_sz = getline(&line, &buf_sz, stdin);
         if (read_sz == -1) {
-            perror("getline");
             return NULL;
         }
         line[read_sz - 1] = '\0';
