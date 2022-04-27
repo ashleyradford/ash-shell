@@ -128,6 +128,10 @@ void *elist_get(struct elist *list, size_t idx)
     return list->element_storage[idx];
 }
 
+void **elist_elements(struct elist *list) {
+    return list->element_storage;
+}
+
 size_t elist_size(struct elist *list)
 {
     return list->size;

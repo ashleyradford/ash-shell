@@ -18,5 +18,6 @@ int elist_set(struct elist *list, size_t idx, void *item);
 int elist_set_capacity(struct elist *list, size_t capacity);
 size_t elist_size(struct elist *list);
 void elist_sort(struct elist *list, int (*comparator)(const void *, const void *));
+void **elist_elements(struct elist *list);
 
 #endif
