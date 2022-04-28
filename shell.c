@@ -182,6 +182,7 @@ int execute_pipeline(struct elist *procs, int pos) {
             dup2(fds[1], STDOUT_FILENO);
             close(fds[1]); // cleaning up fds
             execvp(cmd->tokens[0], cmd->tokens);
+            close(STDIN_FILENO); // child proc will reset fd for parent if exec fails
             perror("Bad command");
             exit(1);
         } else {
@@ -208,8 +209,7 @@ int execute_pipeline(struct elist *procs, int pos) {
             dup2(output, STDOUT_FILENO);
         }
         execvp(cmd->tokens[0], cmd->tokens);
-        close(STDIN_FILENO);    // only fails without this when single command,
-                                // but a bad pipe works without this?
+        close(STDIN_FILENO); // child proc will reset fd for parent if exec fails
         perror("Bad command");
         exit(1);
     }
