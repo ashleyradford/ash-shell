@@ -34,7 +34,7 @@ clean:
 
 test_repo=usf-cs521-sp22/P3-Tests
 
-test: $(all) ./.testlib/run_tests ./tests
+test: all ./.testlib/run_tests ./tests
 	@DEBUG="$(debug)" ./.testlib/run_tests $(run)
 
 grade: ./.testlib/grade
