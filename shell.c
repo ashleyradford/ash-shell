@@ -136,7 +136,7 @@ struct elist *setup_processes(struct elist *tokens) {
             i = elist_size(tokens) - 2; // jump to end of array to create command struct
         }
 
-        /* Check if we are at last token before our null pointer */
+        /* Check if we are at last token before our null pointer or a pipe */
         if ((i == elist_size(tokens) - 2) || (strcmp(tokens_arr[i], "|") == 0)) {
             /* Set up command_line struct */
             struct command_line *cmd = malloc(sizeof(struct command_line));
@@ -152,7 +152,7 @@ struct elist *setup_processes(struct elist *tokens) {
             cmd->stdout_file = redirect_stdout ? stdout_file : NULL;
             cmd->tokens = tokens_arr + token_start;
             
-            /* Check if we are at pipe or at the last command */
+            /* If we are at pipe, set pipe boolean to true */
             if ((i != elist_size(tokens) - 2) && strcmp(tokens_arr[i], "|") == 0) {
                 tokens_arr[i] = '\0';
                 cmd->stdout_pipe = true;
