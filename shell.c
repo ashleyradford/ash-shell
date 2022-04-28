@@ -17,7 +17,8 @@
 struct command_line {
     char **tokens; // pointer to an array of character pointers
     bool stdout_pipe;
-    bool stdin_pipe;
+    bool append;
+    char *stdin_file;
     char *stdout_file;
 };
 
@@ -70,20 +71,20 @@ struct elist *tokenize(char *command) {
     /* Tokenize -- note that ' \t\n\r' will all be removed */
     while ((curr_tok = next_token(&next_tok, " \t\n\r")) != NULL) {
         elist_add(tokens, curr_tok);
-        LOG("Token %zu: '%s'\n", elist_size(tokens), curr_tok);
+        LOG("Token %zu: '%s'\n", elist_size(tokens) - 1, curr_tok);
     }
 
     elist_add(tokens, (char *) 0);
-    LOG("Token %zu: '%s'\n", elist_size(tokens), curr_tok);
+    LOG("Token %zu: '%s'\n", elist_size(tokens) - 1, curr_tok);
     return tokens;
 }
 
 int handle_builtins(struct elist *tokens) {
-    int status = 1;
     if (strcmp(elist_get(tokens,0), "exit") == 0) {
-        status = -1;
+        return -1;  // exit shell
+    } else if (strncmp(elist_get(tokens,0), "#", 1) == 0) {
+        return 0;   // ignore entire comment lines
     } else if (strcmp(elist_get(tokens,0), "cd") == 0) {
-        status = 0;
         char *dir = elist_get(tokens,1);
         if (dir == NULL) {
             char *home = get_home();
@@ -92,8 +93,9 @@ int handle_builtins(struct elist *tokens) {
         } else {
             chdir(dir);
         }
-    }
-    return status;
+        return 0;
+    } 
+    return 1;
 }
 
 struct elist *setup_processes(struct elist *tokens) {
@@ -103,42 +105,64 @@ struct elist *setup_processes(struct elist *tokens) {
     struct elist *cmds = elist_create(30);
     int token_start = 0;
     LOG("elist size: %ld\n", elist_size(tokens));
+
+    bool redirect_stdin = false;
+    bool redirect_stdout = false;
+    bool append_flag = false;
+    char *stdin_file;
+    char *stdout_file;
+
+    /* Iterating up to the last token before our null pointer */
     for (int i = 0; i < elist_size(tokens) - 1; i++) {
-
-        if (strcmp(tokens_arr[i], "|") == 0) {
+        /* Checking for redirection */
+        if (strcmp(tokens_arr[i], "<") == 0) { 
             tokens_arr[i] = '\0';
+            redirect_stdin = true;
+            stdin_file = tokens_arr[i+1];
+            continue;
+        } else if (strcmp(tokens_arr[i], ">") == 0) {
+            tokens_arr[i] = '\0';
+            redirect_stdout = true;
+            stdout_file = tokens_arr[i+1];
+            continue;
+        } else if (strcmp(tokens_arr[i], ">>") == 0) {
+            tokens_arr[i] = '\0';
+            redirect_stdout = true;
+            append_flag = true;
+            stdout_file = tokens_arr[i+1];
+            continue;
+        } else if (strncmp(tokens_arr[i], "#", 1) == 0) {
+            tokens_arr[i] = '\0';
+            i = elist_size(tokens) - 2; // jump to end of array to create command struct
+        }
 
-            /* Create command_line struct for command */
+        /* Check if we are at last token before our null pointer */
+        if ((i == elist_size(tokens) - 2) || (strcmp(tokens_arr[i], "|") == 0)) {
+            /* Set up command_line struct */
             struct command_line *cmd = malloc(sizeof(struct command_line));
             if (cmd == NULL) {
                 perror("command_line malloc");
                 return NULL;
             }
-            
-            /* Set up command_line struct */
-            cmd->tokens = (tokens_arr + token_start);
-            cmd->stdout_pipe = true;
-            cmd->stdout_file = NULL;
-            elist_add(cmds, cmd);
 
+            /* Set up command_line struct */
+            cmd->stdout_pipe = false;
+            cmd->append = append_flag;
+            cmd->stdin_file = redirect_stdin ? stdin_file : NULL;
+            cmd->stdout_file = redirect_stdout ? stdout_file : NULL;
+            cmd->tokens = tokens_arr + token_start;
+            
+            /* Check if we are at pipe or at the last command */
+            if ((i != elist_size(tokens) - 2) && strcmp(tokens_arr[i], "|") == 0) {
+                tokens_arr[i] = '\0';
+                cmd->stdout_pipe = true;
+                token_start = i + 1;
+            }            
+            
+            elist_add(cmds, cmd);
             LOG("cmd token: %s\n", *(cmd->tokens));
-            token_start = i + 1;
         }
     }
-
-    /* Create command_line struct for command */
-    struct command_line *cmd = malloc(sizeof(struct command_line));
-    if (cmd == NULL) {
-        perror("command_line malloc");
-        return NULL;
-    }
-
-    cmd->stdout_pipe = false;
-    cmd->stdout_file = NULL; // COME BACK TO THIS
-    cmd->tokens = (tokens_arr + token_start);
-    elist_add(cmds, cmd);
-
-    LOG("cmd token: %s\n", *(cmd->tokens));
     return cmds;
 }
 
@@ -170,8 +194,17 @@ int execute_pipeline(struct elist *procs, int pos) {
         }
     } else {
         LOG("last command: %s\n", *(cmd->tokens));
+        if (cmd->stdin_file != NULL) {
+            int input = open(cmd->stdin_file, O_RDONLY, 0666);
+            dup2(input, STDIN_FILENO);
+        }
         if (cmd->stdout_file != NULL) {
-            int output = open(cmd->stdout_file, O_CREAT | O_WRONLY, 0666);
+            int output;
+            if (cmd->append) {
+                output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_APPEND, 0666);
+            } else {
+                output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+            }
             dup2(output, STDOUT_FILENO);
         }
         execvp(cmd->tokens[0], cmd->tokens);
