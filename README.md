@@ -58,7 +58,7 @@ make grade
 
 ```
 [aeradford@astra P3-ashleyradford]$ ./ash
-[😋]-[1]-[aeradford@astra:~/P3-ashleyradford]$ cat ui.c | grep bind | tr [:lower:] [:upper:]
+[😋]-[1]-[aeradford@astra:~/P3-ashleyradford]$ grep bind < ui.c | tr [:lower:] [:upper:]
     RL_VARIABLE_BIND("SHOW-ALL-IF-AMBIGUOUS", "ON");
     RL_VARIABLE_BIND("COLORED-COMPLETION-PREFIX", "ON");
 [😋]-[2]-[aeradford@astra:~/P3-ashleyradford]$ hallo
@@ -69,7 +69,7 @@ n<3ig<tion1.sh
 n<3ig<tion2.sh
 [😋]-[5]-[aeradford@astra:~/P3-ashleyradford/tests/inputs]$ cd ..
 [😋]-[6]-[aeradford@astra:~/P3-ashleyradford/tests]$ history
-1 cat ui.c | grep bind | tr [:lower:] [:upper:]
+1 grep bind < ui.c | tr [:lower:] [:upper:]
 2 hallo
 3 cd tests/inputs/
 4 ls | sed s|v|3|g;s|a|<|g; | grep <3
