@@ -28,6 +28,7 @@ void hist_destroy(void)
 
 void hist_add(const char *cmd)
 {
+    /* Ignore invalid command */
     if (strcmp(cmd, "") == 0) {
         return;
     }
@@ -54,22 +55,49 @@ void hist_print(void)
     }
 }
 
+/* Retrieves the most recent command starting with 'prefix'
+ * or NULL if no match found. */
 const char *hist_search_prefix(char *prefix)
 {
-    // TODO: Retrieves the most recent command starting with 'prefix', or NULL
-    // if no match found.
-    return NULL;
+    int idx = -1;
+    for (int i = elist_size(history) - 1; i >= 0; i--) {
+        struct hist_entry *hist_elem = elist_get(history, i);
+        if (strncmp(hist_elem->cmd, prefix, strlen(prefix)) == 0) {
+            idx = i;
+            break;
+        }
+    }
+
+    struct hist_entry *hist_elem = elist_get(history, idx);
+
+    if (hist_elem == NULL) {
+        return NULL;
+    }
+
+    return hist_elem->cmd;
 }
 
+/* Retrieves a particular command number or NULL if no match found */
 const char *hist_search_cnum(int command_number)
 {
-    // TODO: Retrieves a particular command number. Return NULL if no match
-    // found.
-    return NULL;
+    /* Find the first command number */
+    struct hist_entry *first_elem = elist_get(history, 0);
+    if (first_elem == NULL) {
+        return NULL;
+    }
+
+    /* Get proper index */
+    int first_cmd = first_elem->cmd_number;
+    int idx_num = command_number - first_cmd;
+    struct hist_entry *hist_elem = elist_get(history, idx_num);
+    if (hist_elem == NULL) {
+        return NULL;
+    }
+    return hist_elem->cmd;
 }
 
+/* Retrieve the most recent command number */
 unsigned int hist_last_cnum(void)
 {
-    // TODO: Retrieve the most recent command number.
-    return 0;
+    return count;
 }

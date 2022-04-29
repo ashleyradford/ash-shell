@@ -22,6 +22,53 @@ struct command_line {
     char *stdout_file;
 };
 
+int handle_builtins(char **command) {
+    /* Handle builtins -- exit and empty will not be in history */
+    if (strcmp(*command, "exit") == 0) {
+        return -1;  // exit shell
+    } else if (strcmp(command[0], "") == 0) {
+        return 0;
+    } else if (strcmp(*command, "!!") == 0) {
+        *command = strdup(hist_search_cnum(hist_last_cnum()));
+    } else if (strncmp(*command, "!", 1) == 0) {
+        char *endPtr;
+        int cmd_num = (int) strtol(*(command)+1, &endPtr, 10);
+
+        /* Check for prefix -- there should be no 0 cmd_num */
+        const char *tmp;
+        if (cmd_num == 0) {
+            tmp = hist_search_prefix(*(command)+1);
+        } else {
+            tmp = hist_search_cnum(cmd_num);
+        }
+
+        if (tmp != NULL) {
+            *command = strdup(tmp);
+        } else {
+            return 0;
+        }
+    }
+
+    /* Check built ins after bangs */
+    if (strncmp(*command, "#", 1) == 0) {
+        return 0;   // ignore entire comment lines
+    } else if (strcmp(*command, "history") == 0) {
+        hist_add(*command);
+        hist_print();
+        return 0;
+    } else if (strcmp(*command, "cd") == 0) {
+        char *home = get_home();
+        chdir(home);
+        free(home);
+        return 0;
+    } else if (strncmp(*command, "cd", 2) == 0) {
+        char *dir = (*command + 3);
+        chdir(dir);
+        return 0;
+    }
+    return 1;
+}
+
 /**
  * Retrieves the next token from a string.
  *
@@ -77,28 +124,6 @@ struct elist *tokenize(char *command) {
     elist_add(tokens, (char *) 0);
     LOG("Token %zu: '%s'\n", elist_size(tokens) - 1, curr_tok);
     return tokens;
-}
-
-int handle_builtins(struct elist *tokens) {
-    if (strcmp(elist_get(tokens,0), "exit") == 0) {
-        return -1;  // exit shell
-    } else if (strncmp(elist_get(tokens,0), "#", 1) == 0) {
-        return 0;   // ignore entire comment lines
-    } else if (strncmp(elist_get(tokens,0), "history", 1) == 0) {
-        hist_print();
-        return 0;
-    } else if (strcmp(elist_get(tokens,0), "cd") == 0) {
-        char *dir = elist_get(tokens,1);
-        if (dir == NULL) {
-            char *home = get_home();
-            chdir(home);
-            free(home);
-        } else {
-            chdir(dir);
-        }
-        return 0;
-    } 
-    return 1;
 }
 
 struct elist *setup_commands(struct elist *tokens) {
@@ -216,7 +241,7 @@ int execute_pipeline(struct elist *cmds, int pos) {
         perror("Bad command");
         exit(1);
     }
-    return 0;
+    return 0; // why do i get a warning if i have exits above?
 }
 
 int main(void)
@@ -231,28 +256,26 @@ int main(void)
     char *command;
     while (true) {
         command = read_command();
+        set_prompt_status(0); // reset prompt status
+
         if (command == NULL) {
             //goto cleanup;
             free(command);
             break;
         }
-        hist_add(command);
-
-        LOG("Input command: %s\n", command);
         
-        /* Tokenize command */
-        struct elist *tokens = tokenize(command);
-        if (elist_get(tokens, 0) == NULL) {
-            continue; // no command entered
-        }
-
         /* Handle built in commands */
-        int check_builtins = handle_builtins(tokens);
+        int check_builtins = handle_builtins(&command);
         if (check_builtins == -1) {
             break;
         } else if (check_builtins == 0) {
             continue;
         }
+
+        hist_add(command);
+        
+        /* Tokenize command */
+        struct elist *tokens = tokenize(command);
 
         /* Execute commands - handler process will call execute_pipeline */
         struct elist *cmds = setup_commands(tokens);
@@ -269,6 +292,7 @@ int main(void)
         free(command);
     }
 
+    hist_destroy();
     //printf("Goodbye :)\n");
     return 0;
 }
