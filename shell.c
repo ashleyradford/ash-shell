@@ -132,7 +132,7 @@ struct elist *setup_commands(struct elist *tokens) {
 
     struct elist *cmds = elist_create(30);
     int token_start = 0;
-    LOG("elist size: %ld\n", elist_size(tokens));
+    LOG("elist size: %zu\n", elist_size(tokens));
 
     bool redirect_stdin = false;
     bool redirect_stdout = false;
@@ -144,23 +144,23 @@ struct elist *setup_commands(struct elist *tokens) {
     for (int i = 0; i < elist_size(tokens) - 1; i++) {
         /* Checking for redirection */
         if (strcmp(tokens_arr[i], "<") == 0) { 
-            tokens_arr[i] = '\0';
+            tokens_arr[i] = (char *) 0;
             redirect_stdin = true;
             stdin_file = tokens_arr[i+1];
             continue; // do we need to continue??
         } else if (strcmp(tokens_arr[i], ">") == 0) {
-            tokens_arr[i] = '\0';
+            tokens_arr[i] = (char *) 0;
             redirect_stdout = true;
             stdout_file = tokens_arr[i+1];
             continue;
         } else if (strcmp(tokens_arr[i], ">>") == 0) {
-            tokens_arr[i] = '\0';
+            tokens_arr[i] = (char *) 0;
             redirect_stdout = true;
             append_flag = true;
             stdout_file = tokens_arr[i+1];
             continue;
         } else if (strncmp(tokens_arr[i], "#", 1) == 0) {
-            tokens_arr[i] = '\0';
+            tokens_arr[i] = (char *) 0;
             i = elist_size(tokens) - 2; // jump to end of array to create command struct
         }
 
@@ -182,7 +182,7 @@ struct elist *setup_commands(struct elist *tokens) {
             
             /* If we are at pipe, set pipe boolean to true */
             if ((i != elist_size(tokens) - 2) && strcmp(tokens_arr[i], "|") == 0) {
-                tokens_arr[i] = '\0';
+                tokens_arr[i] = (char *) 0;
                 cmd->stdout_pipe = true;
                 token_start = i + 1;
             }            

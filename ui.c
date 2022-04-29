@@ -14,7 +14,7 @@
 static const char *good_str = "😋";
 static const char *bad_str  = "😭";
 static bool scripting = false;
-static int status;
+static int prompt_status;
 static char *user;
 static char host[HOST_NAME_MAX + 1];
 // + 1 to deal with possible truncation in gethostname()
@@ -47,10 +47,10 @@ void destroy_ui(void)
 
 char *prompt_line(void)
 {
-    const char *status = prompt_status() ? bad_str : good_str;
+    const char *status = get_prompt_status() ? bad_str : good_str;
 
     char cmd_num[25];
-    snprintf(cmd_num, 25, "%d", prompt_cmd_num());
+    snprintf(cmd_num, 25, "%u", prompt_cmd_num());
 
     //char *user = prompt_username();
     //char *host = prompt_hostname();
@@ -98,10 +98,10 @@ char *get_home(void) {
     char *home_dir = malloc(strlen("/home/") + strlen(user) + 1);
     if (home_dir == NULL) {
         perror("home_dir malloc error");
+        return NULL;
     }
     memcpy(home_dir, "/home/", strlen("/home/"));
     strcat(home_dir, user);
-    //strcat(home_dir, "\0"); // do we even need this?
 
     return home_dir;
 }
@@ -124,13 +124,13 @@ char *prompt_cwd(void)
     return cwd;
 }
 
-int prompt_status(void)
+int get_prompt_status(void)
 {
-    return status;
+    return prompt_status;
 }
 
 void set_prompt_status(int val) {
-    status = val;
+    prompt_status = val;
 }
 
 unsigned int prompt_cmd_num(void)

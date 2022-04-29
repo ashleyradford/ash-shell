@@ -10,7 +10,7 @@
 static struct elist *history;
 static int count = 0;
 struct hist_entry {
-    char *cmd;
+    const char *cmd;
     int cmd_number;
 };
 
@@ -40,6 +40,7 @@ void hist_add(const char *cmd)
     struct hist_entry *hist_elem = malloc(sizeof(struct hist_entry));
     if (hist_elem == NULL) {
         perror("hist_elem malloc");
+        return;
     }
 
     hist_elem->cmd = strdup(cmd);
