@@ -190,7 +190,12 @@ struct elist *setup_commands(struct elist *tokens) {
             }            
             
             elist_add(cmds, cmd);
-            LOG("cmd token: %s\n", *(cmd->tokens));
+            LOG("cmd tokens: %s\n", *(cmd->tokens));
+
+            /* Reset all flags */
+            redirect_stdin = false;
+            redirect_stdout = false;
+            append_flag = false;
         }
     }
     return cmds;
@@ -200,6 +205,21 @@ int execute_pipeline(struct elist *cmds, int pos) {
 
     /* Sets up a pipeline piece by piece */
     struct command_line *cmd = elist_get(cmds, pos);
+
+    /* Take care of any redirection -- will cary into child as well */
+    if (cmd->stdin_file != NULL) {
+        int input = open(cmd->stdin_file, O_RDONLY, 0666);
+        dup2(input, STDIN_FILENO);
+    }
+    if (cmd->stdout_file != NULL) {
+        int output;
+        if (cmd->append) {
+            output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_APPEND, 0666);
+        } else {
+            output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+        }
+        dup2(output, STDOUT_FILENO);
+    }
 
     if (cmd->stdout_pipe) {
         int fds[2];
@@ -225,19 +245,6 @@ int execute_pipeline(struct elist *cmds, int pos) {
         }
     } else {
         LOG("last command: %s\n", *(cmd->tokens));
-        if (cmd->stdin_file != NULL) {
-            int input = open(cmd->stdin_file, O_RDONLY, 0666);
-            dup2(input, STDIN_FILENO);
-        }
-        if (cmd->stdout_file != NULL) {
-            int output;
-            if (cmd->append) {
-                output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_APPEND, 0666);
-            } else {
-                output = open(cmd->stdout_file, O_CREAT | O_WRONLY | O_TRUNC, 0666);
-            }
-            dup2(output, STDOUT_FILENO);
-        }
         execvp(cmd->tokens[0], cmd->tokens);
         close(STDIN_FILENO); // child proc will reset fd for parent if exec fails
         perror("Bad command");
