@@ -135,8 +135,7 @@ void set_prompt_status(int val) {
 
 unsigned int prompt_cmd_num(void)
 {
-    // maybe use history functions here
-    return 0;
+    return hist_last_cnum() + 1;
 }
 
 char *read_command(void)
