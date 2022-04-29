@@ -8,33 +8,27 @@ TODO: Replace this section with a short (1-3 paragraph) description of the proje
 
 ## Building
 
-TODO: Update this section as necessary.
-
 To compile and run:
-
 ```bash
-make
-./program_name
+make     # compiles ash shell
+./ash    # non scripting mode
 ```
 
-## Program Options
-
-TODO: Provide an overview of program options and their descriptions, if applicable. If the program does not accept any options, delete this section.
-
+To run in scriting mode:
 ```bash
-$ ./some_prog -h
-Usage: ./some_prog [-z] [-d dir]
-
-Options:
-    * -d              Directory to load information from.
-    * -z              Enable super secret 'Z' mode
+./ash < [some_input_file]
 ```
 
 ## Included Files
 
-* **file1.c** -- TODO: Describe any major program modules here.
-* **file2.h** -- TODO: You don't need to include utilities, makefiles, etc.
-* **file3.asm** -- TODO: Just the most important files! (And don't forget their descriptions)
+* **elist.c** -- library that implements a dynamic array
+* **elist.h** -- header file for elist
+* **history.c** -- sets up shell history data structures and retrieval functions
+* **history.h** -- header file for history
+* **logger.h** -- provides basic logging functionality
+* **shell.c** -- command line interface for ash shell
+* **ui.c** -- provides text based UI functionality
+* **ui.h** -- header file for ui
 
 ## Testing
 
@@ -62,5 +56,28 @@ make grade
 
 ## Demo Run
 
-TODO: add a screenshot / text of a demo run of your program here.
-
+```
+[aeradford@astra P3-ashleyradford]$ ./ash
+[😋]-[1]-[aeradford@astra:~/P3-ashleyradford]$ cat ui.c | grep bind | tr [:lower:] [:upper:]
+    RL_VARIABLE_BIND("SHOW-ALL-IF-AMBIGUOUS", "ON");
+    RL_VARIABLE_BIND("COLORED-COMPLETION-PREFIX", "ON");
+[😋]-[2]-[aeradford@astra:~/P3-ashleyradford]$ hallo
+Bad command: No such file or directory
+[😭]-[3]-[aeradford@astra:~/P3-ashleyradford]$ cd tests/inputs/
+[😋]-[4]-[aeradford@astra:~/P3-ashleyradford/tests/inputs]$ ls | sed s|v|3|g;s|a|<|g; | grep <3
+n<3ig<tion1.sh
+n<3ig<tion2.sh
+[😋]-[5]-[aeradford@astra:~/P3-ashleyradford/tests/inputs]$ cd ..
+[😋]-[6]-[aeradford@astra:~/P3-ashleyradford/tests]$ history
+1 cat ui.c | grep bind | tr [:lower:] [:upper:]
+2 hallo
+3 cd tests/inputs/
+4 ls | sed s|v|3|g;s|a|<|g; | grep <3
+5 cd ..
+6 history
+[😋]-[7]-[aeradford@astra:~/P3-ashleyradford/tests]$ !2
+Bad command: No such file or directory
+[😭]-[8]-[aeradford@astra:~/P3-ashleyradford/tests]$ echo yay
+yay
+[😋]-[9]-[aeradford@astra:~/P3-ashleyradford/tests]$ exit
+```
