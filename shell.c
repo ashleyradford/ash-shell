@@ -57,11 +57,13 @@ int handle_builtins(char **command) {
         hist_print();
         return 0;
     } else if (strcmp(*command, "cd") == 0) {
+        hist_add(*command);
         char *home = get_home();
         chdir(home);
         free(home);
         return 0;
     } else if (strncmp(*command, "cd", 2) == 0) {
+        hist_add(*command);
         char *dir = (*command + 3);
         chdir(dir);
         return 0;
