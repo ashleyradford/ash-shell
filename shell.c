@@ -84,6 +84,9 @@ int handle_builtins(struct elist *tokens) {
         return -1;  // exit shell
     } else if (strncmp(elist_get(tokens,0), "#", 1) == 0) {
         return 0;   // ignore entire comment lines
+    } else if (strncmp(elist_get(tokens,0), "history", 1) == 0) {
+        hist_print();
+        return 0;
     } else if (strcmp(elist_get(tokens,0), "cd") == 0) {
         char *dir = elist_get(tokens,1);
         if (dir == NULL) {
@@ -98,7 +101,7 @@ int handle_builtins(struct elist *tokens) {
     return 1;
 }
 
-struct elist *setup_processes(struct elist *tokens) {
+struct elist *setup_commands(struct elist *tokens) {
     /* Grab tokens as an array first to help brain understand */
     char **tokens_arr = (char **) elist_elements(tokens);
 
@@ -119,7 +122,7 @@ struct elist *setup_processes(struct elist *tokens) {
             tokens_arr[i] = '\0';
             redirect_stdin = true;
             stdin_file = tokens_arr[i+1];
-            continue;
+            continue; // do we need to continue??
         } else if (strcmp(tokens_arr[i], ">") == 0) {
             tokens_arr[i] = '\0';
             redirect_stdout = true;
@@ -166,10 +169,10 @@ struct elist *setup_processes(struct elist *tokens) {
     return cmds;
 }
 
-int execute_pipeline(struct elist *procs, int pos) {
+int execute_pipeline(struct elist *cmds, int pos) {
 
     /* Sets up a pipeline piece by piece */
-    struct command_line *cmd = elist_get(procs, pos);
+    struct command_line *cmd = elist_get(cmds, pos);
 
     if (cmd->stdout_pipe) {
         int fds[2];
@@ -191,7 +194,7 @@ int execute_pipeline(struct elist *procs, int pos) {
             close(fds[1]); // closing write
             dup2(fds[0], STDIN_FILENO);
             close(fds[0]); // cleaning up fds
-            execute_pipeline(procs, pos+1);
+            execute_pipeline(cmds, pos+1);
         }
     } else {
         LOG("last command: %s\n", *(cmd->tokens));
@@ -218,9 +221,12 @@ int execute_pipeline(struct elist *procs, int pos) {
 
 int main(void)
 {
+    /* Ignore CTRL+C signal */
     signal(SIGINT, SIG_IGN);
 
+    /* Set up ui and history struct */
     init_ui();
+    hist_init(100);
 
     char *command;
     while (true) {
@@ -230,6 +236,8 @@ int main(void)
             free(command);
             break;
         }
+        hist_add(command);
+
         LOG("Input command: %s\n", command);
         
         /* Tokenize command */
@@ -247,10 +255,10 @@ int main(void)
         }
 
         /* Execute commands - handler process will call execute_pipeline */
-        struct elist *procs = setup_processes(tokens);
+        struct elist *cmds = setup_commands(tokens);
         pid_t child = fork();
         if (child == 0) {
-            execute_pipeline(procs, 0);
+            execute_pipeline(cmds, 0);
         } else {
             int status;
             wait(&status); // waiting to know that the pipeline is finished
