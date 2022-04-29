@@ -9,7 +9,6 @@
 #define _UI_H_
 
 void init_ui(void);
-
 char *prompt_line(void);
 char *prompt_username(void);
 char *prompt_hostname(void);
