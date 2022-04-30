@@ -29,6 +29,7 @@ int handle_builtins(char **command) {
     } else if (strcmp(command[0], "") == 0) {
         return 0;
     } else if (strcmp(*command, "!!") == 0) {
+        free(*command);
         *command = strdup(hist_search_cnum(hist_last_cnum()));
     } else if (strncmp(*command, "!", 1) == 0) {
         char *endPtr;
@@ -42,7 +43,9 @@ int handle_builtins(char **command) {
             tmp = hist_search_cnum(cmd_num);
         }
 
+        /* Check if no history could be found */
         if (tmp != NULL) {
+            free(*command);
             *command = strdup(tmp);
         } else {
             return 0;
@@ -51,7 +54,7 @@ int handle_builtins(char **command) {
 
     /* Check built ins after bangs */
     if (strncmp(*command, "#", 1) == 0) {
-        return 0;   // ignore entire comment lines
+        return 0; // ignore entire comment lines
     } else if (strcmp(*command, "history") == 0) {
         hist_add(*command);
         hist_print();
@@ -149,7 +152,7 @@ struct elist *setup_commands(struct elist *tokens) {
             tokens_arr[i] = (char *) 0;
             redirect_stdin = true;
             stdin_file = tokens_arr[i+1];
-            continue; // do we need to continue??
+            continue; // can't string compare null so go next
         } else if (strcmp(tokens_arr[i], ">") == 0) {
             tokens_arr[i] = (char *) 0;
             redirect_stdout = true;
@@ -183,7 +186,7 @@ struct elist *setup_commands(struct elist *tokens) {
             cmd->tokens = tokens_arr + token_start;
             
             /* If we are at pipe, set pipe boolean to true */
-            if ((i != elist_size(tokens) - 2) && strcmp(tokens_arr[i], "|") == 0) {
+            if (strcmp(tokens_arr[i], "|") == 0) {
                 tokens_arr[i] = (char *) 0;
                 cmd->stdout_pipe = true;
                 token_start = i + 1;
@@ -250,7 +253,7 @@ int execute_pipeline(struct elist *cmds, int pos) {
         perror("Bad command");
         exit(1);
     }
-    return 0; // why do i get a warning if i have exits above?
+    return 0; // why do we have to include if above else has exit??
 }
 
 int main(void)
@@ -268,7 +271,6 @@ int main(void)
         set_prompt_status(0); // reset prompt status
 
         if (command == NULL) {
-            //goto cleanup;
             free(command);
             break;
         }
@@ -276,8 +278,10 @@ int main(void)
         /* Handle built in commands */
         int check_builtins = handle_builtins(&command);
         if (check_builtins == -1) {
+            free(command);
             break;
         } else if (check_builtins == 0) {
+            free(command);
             continue;
         }
 
@@ -297,11 +301,16 @@ int main(void)
             set_prompt_status(status);
         }
 
-        /* We are done with command; free it */
+        /* Free user commad, each command and then all tokens and cmds list */
         free(command);
+        for (int i = 0; i < elist_size(cmds); i++) {
+            struct command_line *cmd = elist_get(cmds, i);
+            free(cmd);
+        }
+        elist_destroy(tokens);
+        elist_destroy(cmds);
     }
 
     hist_destroy();
-    //printf("Goodbye :)\n");
     return 0;
 }

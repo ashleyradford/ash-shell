@@ -21,7 +21,14 @@ void hist_init(unsigned int limit)
 }
 
 void hist_destroy(void)
-{
+{   
+    /* Free each history element */
+    for (int i = 0; i < elist_size(history); i++) {
+        struct hist_entry *hist_elem = elist_get(history, i);
+        free((char *) hist_elem->cmd);
+        free(hist_elem);
+    }
+
     /* Destory history elist */
     elist_destroy(history);
 }
@@ -58,7 +65,7 @@ void hist_print(void)
 }
 
 /* Retrieves the most recent command starting with 'prefix'
- * or NULL if no match found. */
+ * or NULL if no match found */
 const char *hist_search_prefix(char *prefix)
 {
     int idx = -1;

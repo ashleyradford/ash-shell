@@ -76,7 +76,8 @@ int elist_set_capacity(struct elist *list, size_t capacity)
     list->element_storage = new_elements;
     list->capacity = capacity;
 
-    if (list->capacity < list->size) { // making list smaller
+    /* Making list smaller */
+    if (list->capacity < list->size) {
         list->size = list->capacity;
     }
 
@@ -152,14 +153,14 @@ int elist_remove(struct elist *list, size_t idx)
 
 void elist_clear(struct elist *list)
 {
-    /* resizing to 0 */
+    /* Resizing to 0 */
     list->element_storage = NULL;
     list->size = 0;
 }
 
 void elist_clear_mem(struct elist *list)
 {
-    /* zeroing out the elements and resizing to 0 */
+    /* Zeroing out the elements and resizing to 0 */
     for (int i = 0; i < list->size; i++) {
         elist_set(list, i, NULL);
     }

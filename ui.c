@@ -40,11 +40,6 @@ void init_ui(void)
     }
 }
 
-void destroy_ui(void)
-{
-    // TODO cleanup code, if necessary
-}
-
 char *prompt_line(void)
 {
     const char *status = get_prompt_status() ? bad_str : good_str;
@@ -67,7 +62,7 @@ char *prompt_line(void)
         + strlen(cwd)
         + 1;
 
-    char *prompt_str =  malloc(sizeof(char) * prompt_sz);
+    char *prompt_str = malloc(sizeof(char) * prompt_sz);
 
     snprintf(prompt_str, prompt_sz, format_str,
             status,
@@ -114,7 +109,7 @@ char *prompt_cwd(void)
     }
     cwd = getcwd(cwd, PATH_MAX);
 
-    char* home_dir = get_home();
+    char *home_dir = get_home();
     if (strncmp(cwd, home_dir, strlen(home_dir)) == 0) {
         *(cwd + strlen(home_dir) - 1) = '~';
         cwd = cwd + strlen(home_dir) - 1;
@@ -145,6 +140,7 @@ char *read_command(void)
         size_t buf_sz = 0;
         ssize_t read_sz = getline(&line, &buf_sz, stdin);
         if (read_sz == -1) {
+            free(line);
             return NULL;
         }
         line[read_sz - 1] = '\0';
