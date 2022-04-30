@@ -77,7 +77,7 @@ char *prompt_line(void)
 char *prompt_username(void)
 {
     uid_t uid = getuid();
-    /* password struct exists in memory when our program
+    /* Password struct exists in memory when our program
      * runs so not actually allocating memory here */
     struct passwd *pwd = getpwuid(uid);
     return pwd->pw_name;        
@@ -144,10 +144,11 @@ char *read_command(void)
             return NULL;
         }
         line[read_sz - 1] = '\0';
-        return line; // remember to free!!
+        return line;
     } else {
         char *prompt = prompt_line();
-        char *command = readline(prompt); // allows us to arrow back and forth over the line we are typing
+        /* Allows us to arrow back and forth over the line we are typing */
+        char *command = readline(prompt);
         free(prompt);
         return command;
     }

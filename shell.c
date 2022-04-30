@@ -22,10 +22,10 @@ struct command_line {
     char *stdout_file;
 };
 
+/* Handle builtins -- exit and empty will not be in history */
 int handle_builtins(char **command) {
-    /* Handle builtins -- exit and empty will not be in history */
     if (strcmp(*command, "exit") == 0) {
-        return -1;  // exit shell
+        return -1; // exit shell
     } else if (strcmp(command[0], "") == 0) {
         return 0;
     } else if (strcmp(*command, "!!") == 0) {
@@ -74,20 +74,7 @@ int handle_builtins(char **command) {
     return 1;
 }
 
-/**
- * Retrieves the next token from a string.
- *
- * Parameters:
- * - str_ptr: maintains context in the string, i.e., where the next token in the
- *   string will be. If the function returns token N, then str_ptr will be
- *   updated to point to token N+1. To initialize, declare a char * that points
- *   to the string being tokenized. The pointer will be updated after each
- *   successive call to next_token.
- *
- * - delim: the set of characters to use as delimiters
- *
- * Returns: char pointer to the next token in the string.
- */
+/* Retrieves the next token from a string */
 char *next_token(char **str_ptr, const char *delim)
 {
     if (*str_ptr == NULL) {
@@ -97,19 +84,25 @@ char *next_token(char **str_ptr, const char *delim)
     size_t tok_start = strspn(*str_ptr, delim);
     size_t tok_end = strcspn(*str_ptr + tok_start, delim);
 
-    if (tok_end  == 0) { // zero length token, we must be done
+    /* Zero length token, we must be done */
+    if (tok_end  == 0) {
         *str_ptr = NULL;
         return NULL;
     }
 
-    char *current_ptr = *str_ptr + tok_start; // start of the current token
-    *str_ptr += tok_start + tok_end; // shift ptr forward (to the end of the current token)
+    /* Start of the current token */
+    char *current_ptr = *str_ptr + tok_start;
+    /* Shift ptr forward (to the end of the current token) */
+    *str_ptr += tok_start + tok_end;
 
     if (**str_ptr == '\0') {
-        *str_ptr = NULL;    // at last token
+        /* At the last token */
+        *str_ptr = NULL;
     } else {
-        **str_ptr = '\0';   // need to terminate the token string
-        (*str_ptr)++;       // point at the first character of the next token
+        /* Need to terminate the token string */
+        **str_ptr = '\0';
+        /* Point at the first character of the next token */
+        (*str_ptr)++;
     }
 
     return current_ptr;

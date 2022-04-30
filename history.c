@@ -102,6 +102,7 @@ const char *hist_search_cnum(int command_number)
     if (hist_elem == NULL) {
         return NULL;
     }
+    
     return hist_elem->cmd;
 }
 
