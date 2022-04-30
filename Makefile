@@ -3,7 +3,7 @@ bin=ash
 lib=libshell.so
 
 # Set the following to '0' to disable log messages:
-LOGGER ?= 1
+LOGGER ?= 0
 
 # Compiler/linker flags
 CFLAGS += -g -Wall -fPIC -DLOGGER=$(LOGGER)
