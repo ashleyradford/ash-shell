@@ -1,10 +1,18 @@
 # Project 3: Command Line Shell
 
-See: https://www.cs.usfca.edu/~mmalensek/cs521/assignments/project-3.html
+A command line interface that responds to user input. The prompt of ash displays the status of the most recent command, the current command number, username and hostname, and the current working directory. Scripting mode is also supported by ash where commands are read from standard input and executed without displaying the prompt.
 
-TODO: Remove the link above. Your README should not depend on a link to the spec.
+This shell supports the following built-in commands:
 
-TODO: Replace this section with a short (1-3 paragraph) description of the project. What it does, how it does it, and any features that stand out. If you ever need to refer back to this project, the description should jog your memory.
+* `cd` will change the current working directory, cd without arguments will return to the user's home directory
+* `# (comments)` all strings prefixed with # will be ignored
+* `history` prints the last 100 commands entered with their command numbers
+* `!(history execution)` entering !39 will re-run command number 39 and !! reruns the last command that was entered, !ls re-runs the last command that starts with `ls`
+* `exit` will exit ash
+
+Commands from the user are first tokenized and added to an elist that can be dynamically resized as needed. From this list of tokens, commands are separated and added to a commands elist - each command from a user is separated by a pipe. Once this is done, the commands elist is sent to a process handler.
+
+This handler forks a child process where the commands are sent into `execute_pipeline()`. Here, the commands are executed - if there is a single command a single `execvp()` is called, otherwise `execute_pipeline()` forks a new child process for each additional command. These commands are able to communicate with each other through `pipe()`. Redirection is also supported here by making use of the `dup2()` system call.
 
 ## Building
 
@@ -14,7 +22,7 @@ make     # compiles ash shell
 ./ash    # non scripting mode
 ```
 
-To run in scriting mode:
+To run in scripting mode:
 ```bash
 ./ash < [some_input_file]
 ```
