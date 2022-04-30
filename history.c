@@ -54,6 +54,7 @@ void hist_print(void)
         struct hist_entry *hist_elem = elist_get(history, i);
         printf("%d %s\n", hist_elem->cmd_number, hist_elem->cmd);
     }
+    fflush(stdout); // clear the buffer
 }
 
 /* Retrieves the most recent command starting with 'prefix'
