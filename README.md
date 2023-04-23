@@ -1,4 +1,4 @@
-# Project 3: Command Line Shell
+# Command Line Shell: `ash`
 
 A command line interface that responds to user input. The prompt of ash displays the status of the most recent command, the current command number, username and hostname, and the current working directory. Scripting mode is also supported by ash where commands are read from standard input and executed without displaying the prompt.
 
