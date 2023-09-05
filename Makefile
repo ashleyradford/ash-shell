@@ -29,9 +29,7 @@ elist.o: elist.h elist.c logger.h
 clean:
 	rm -f $(bin) $(obj) $(lib) vgcore.*
 
-
 # Tests --
-
 test_repo=usf-cs521-sp22/P3-Tests
 
 test: all ./.testlib/run_tests ./tests

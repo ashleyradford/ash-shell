@@ -1,0 +1,7 @@
+Hello world this is a nice long message to save to a file
+
+cat shell.c | grep child | tr [:lower:] [:upper:]
+blabla
+cat shell.c | grep child
+cat history.c | grep match
+cat shell.c | grep child | tr [:lower:] [:upper:]

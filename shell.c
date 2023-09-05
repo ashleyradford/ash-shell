@@ -23,7 +23,8 @@ struct command_line {
 };
 
 /* Handle builtins -- exit and empty will not be in history */
-int handle_builtins(char **command) {
+int handle_builtins(char **command)
+{
     if (strcmp(*command, "exit") == 0) {
         return -1; // exit shell
     } else if (strcmp(command[0], "") == 0) {
@@ -108,7 +109,8 @@ char *next_token(char **str_ptr, const char *delim)
     return current_ptr;
 }
 
-struct elist *tokenize(char *command) {
+struct elist *tokenize(char *command)
+{
     struct elist *tokens = elist_create(26);
     char *next_tok = command;
     char *curr_tok;
@@ -124,7 +126,8 @@ struct elist *tokenize(char *command) {
     return tokens;
 }
 
-struct elist *setup_commands(struct elist *tokens) {
+struct elist *setup_commands(struct elist *tokens)
+{
     /* Grab tokens as an array first to help brain understand */
     char **tokens_arr = (char **) elist_elements(tokens);
 
@@ -197,8 +200,8 @@ struct elist *setup_commands(struct elist *tokens) {
     return cmds;
 }
 
-int execute_pipeline(struct elist *cmds, int pos) {
-
+int execute_pipeline(struct elist *cmds, int pos)
+{
     /* Sets up a pipeline piece by piece */
     struct command_line *cmd = elist_get(cmds, pos);
 

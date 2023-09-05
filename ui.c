@@ -89,7 +89,8 @@ char *prompt_hostname(void)
     return host;
 }
 
-char *get_home(void) {
+char *get_home(void)
+{
     char *home_dir = malloc(strlen("/home/") + strlen(user) + 1);
     if (home_dir == NULL) {
         perror("home_dir malloc error");
@@ -124,7 +125,8 @@ int get_prompt_status(void)
     return prompt_status;
 }
 
-void set_prompt_status(int val) {
+void set_prompt_status(int val)
+{
     prompt_status = val;
 }
 

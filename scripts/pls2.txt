@@ -1,0 +1,4 @@
+cat shell.c | grep child
+cat history.c | grep match
+cat history.c | blabla
+cat shell.c | grep child | tr [:lower:] [:upper:]
